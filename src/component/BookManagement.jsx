@@ -1,5 +1,5 @@
 import { Button, Form, Input, message, Modal, Select, Table } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function BookManagement({ books, categories, saveBooks }) {
   const [isShowForm, setIsShowForm] = useState(false);
@@ -17,11 +17,12 @@ export default function BookManagement({ books, categories, saveBooks }) {
   const [bookUpdate, setBookUpdate] = useState(null);
   const [inputSearchName, setInputSearchName] = useState("");
   const [inputSearchCategory, setInputSearchCategory] = useState("");
-  const [listBook, setListBook] = useState(books);
+  const [listBook, setListBook] = useState([...books]);
 
-  const setValueSearchName = (event) => {
-    setInputSearchName(event.target.value);
-  };
+  useEffect(() => {
+    setListBook(books);
+  }, [books]);
+
   const resetData = () => {
     setInputBookName("");
     setInputAuthor("");
@@ -170,21 +171,26 @@ export default function BookManagement({ books, categories, saveBooks }) {
   };
 
   const handleSelectCategory = (value) => {
+    setInputSearchCategory(value);
+  };
+
+  const setValueInputCategory = (value) => {
     setInputCategory(value);
   };
 
   const handleSearch = () => {
-    setListBook((prevBooks) => {
-      return prevBooks.filter((book) => {
+    console.log("Searching for:", inputSearchName, inputSearchCategory);
+    setListBook(() => {
+      return books.filter((book) => {
         const matchesName = inputSearchName
           ? book.bookName.toLowerCase().includes(inputSearchName.toLowerCase())
-          : true; // Nếu không có tên tìm kiếm, điều kiện này luôn đúng
+          : true;
 
         const matchesCategory = inputSearchCategory
-          ? book.categoryName === inputSearchCategory
-          : true; // Nếu không có danh mục tìm kiếm, điều kiện này luôn đúng
+          ? book.category === inputSearchCategory
+          : true;
 
-        return matchesName && matchesCategory; // Chỉ giữ sách nếu cả hai điều kiện đều đúng
+        return matchesName && matchesCategory;
       });
     });
   };
@@ -263,10 +269,7 @@ export default function BookManagement({ books, categories, saveBooks }) {
       </div>
 
       <div className="flex justify-end mr-[100px] mt-10 gap-4">
-        <Form
-          className="flex justify-end mr-[100px] mt-10 gap-4"
-          onSubmit={handleSearch}
-        >
+        <Form className="flex justify-end mr-[100px] mt-10 gap-4">
           <Input
             value={inputSearchName}
             type="text"
@@ -276,9 +279,10 @@ export default function BookManagement({ books, categories, saveBooks }) {
           <Select
             defaultValue="Chọn danh mục"
             style={{ width: 200 }}
-            onChange={(value) => setInputSearchCategory(value)}
+            onChange={handleSelectCategory}
             value={inputSearchCategory}
           >
+            <Option value="">Tất cả danh mục</Option>{" "}
             {categories.map((category) => (
               <Option key={category.id} value={category.categoryName}>
                 {category.categoryName}
@@ -345,7 +349,7 @@ export default function BookManagement({ books, categories, saveBooks }) {
               value={inputCategory}
               defaultValue="Chọn danh mục"
               style={{ width: 200 }}
-              onChange={handleSelectCategory}
+              onChange={(value) => setValueInputCategory(value)}
             >
               {categories.map((category) => (
                 <Select.Option key={category.id} value={category.categoryName}>
